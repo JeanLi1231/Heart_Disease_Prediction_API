@@ -34,11 +34,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t heart-disease-prediction-api .
+          docker build -t heart-disease-prediction-api:1.0 .
 
       - name: Run Docker container
         run: |
-          docker run -d --name heart-disease-prediction-api -p 8000:8000 heart-disease-prediction-api:1.0
+          docker run -d --name heart-disease-prediction-api:1.0 -p 8000:8000 heart-disease-prediction-api:1.0
 
       - name: Wait for API to be ready
         run: |
@@ -60,6 +60,6 @@ jobs:
       - name: Stop and remove Docker container
         if: always()
         run: |
-          docker stop heart-disease-prediction-api
-          docker rm heart-disease-prediction-api
+          docker stop heart-disease-prediction-api:1.0
+          docker rm heart-disease-prediction-api:1.0
 
