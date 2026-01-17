@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Lint with flake8
+        run: |
+          flake8 src app tests
+
+      - name: Run unit tests
+        run: |
+          PYTHONPATH=. pytest -v tests/test_api.py
+
+      - name: Build Docker image
+        run: |
+          docker build -t heart-disease-prediction-api .
+
+      - name: Run Docker container
+        run: |
+          docker run -d --name heart-disease-prediction-api -p 8000:8000 heart-disease-prediction-api:1.0
+
+      - name: Wait for API to be ready
+        run: |
+          for i in {1..20}; do
+            if curl -f http://localhost:8000/health; then
+              echo "API is ready"
+              exit 0
+            fi
+            echo "Waiting for API..."
+            sleep 2
+          done
+          echo "API did not become ready in time"
+          exit 1
+
+      - name: Run live API tests
+        run: |
+          PYTHONPATH=. pytest -v tests/test_api_live.py
+
+      - name: Stop and remove Docker container
+        if: always()
+        run: |
+          docker stop heart-disease-prediction-api
+          docker rm heart-disease-prediction-api
+

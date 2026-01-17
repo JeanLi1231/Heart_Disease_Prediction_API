@@ -1,0 +1,10 @@
+data:
+  input_path: data/heart.csv
+  target_col: HeartDisease
+
+output:
+  model_path: models/model.pkl
+
+training:
+  test_size: 0.2
+  random_state: 99

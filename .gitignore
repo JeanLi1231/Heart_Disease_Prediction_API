@@ -1,0 +1,62 @@
+# ------------------------
+# Python cache and environments
+# ------------------------
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ------------------------
+# Jupyter Notebook
+# ------------------------
+.ipynb_checkpoints/
+
+# ------------------------
+# Data and outputs
+# ------------------------
+# Ignore everything inside data/ and models/ and outputs/
+data/*
+models/*
+outputs/*
+# But keep .gitkeep in empty folders
+!data/.gitkeep
+!models/.gitkeep
+!outputs/.gitkeep
+
+# Ignore specific file types
+*.csv
+*.h5
+*.pkl
+*.joblib
+*.zip
+
+# ------------------------
+# OS-specific
+# ------------------------
+.DS_Store
+Thumbs.db
+
+# ------------------------
+# IDEs / Editors
+# ------------------------
+.vscode/
+.idea/
+
+# ------------------------
+# Environment variables and secrets
+# ------------------------
+*.env
+.zshrc
+.bashrc
+
+# ------------------------
+# Temporary / Miscellaneous
+# ------------------------
+*.log
+*.tmp
+*.bak
