@@ -14,7 +14,7 @@ VALID_SAMPLE = {
     "MaxHR": 122,
     "ExerciseAngina": "N",
     "Oldpeak": 0,
-    "ST_Slope": "Up",
+    "ST_Slope": "Up"
 }
 
 
@@ -44,28 +44,25 @@ def test_health():
     assert r.json() == {"status": "ok"}
 
 
-def test_predict_returns_503_when_model_missing():
-    """
-    In CI we do not ship model.pkl into the container.
-    The service should still start, but /predict should return 503.
-    """
+def test_predict():
     wait_for_api()
 
     r = requests.post(f"{BASE_URL}/v1/predict", json=VALID_SAMPLE)
-    assert r.status_code == 503
+    assert r.status_code == 200
 
     data = r.json()
-    assert "detail" in data
+    assert "prediction" in data
+    assert "probability" in data
+    assert data["prediction"] in (0, 1)
+    assert 0.0 <= data["probability"] <= 1.0
 
 
-def test_model_info_when_model_missing():
-    """
-    When no model is loaded, /model-info should still respond (usually {}).
-    """
+def test_model_info():
     wait_for_api()
 
     r = requests.get(f"{BASE_URL}/v1/model-info")
     assert r.status_code == 200
 
     data = r.json()
-    assert isinstance(data, dict)
+    assert "model_version" in data
+    assert "trained_at" in data

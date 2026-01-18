@@ -55,7 +55,7 @@ jobs:
 
       - name: Run live API tests
         run: |
-          PYTHONPATH=. pytest -v tests/test_api_live.py
+          PYTHONPATH=. pytest -v tests/test_api_live_nomodel.py
 
       - name: Stop and remove Docker container
         if: always()

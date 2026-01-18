@@ -14,7 +14,7 @@ import logging
 
 import pandas as pd
 import joblib
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from pydantic import BaseModel, Field
 
 
@@ -28,6 +28,9 @@ app = FastAPI(
     title="Heart Disease Prediction API",
     description="Predicts risk of heart disease using a trained ML pipeline."
 )
+
+API_V1_PREFIX = "/v1"
+v1_router = APIRouter(prefix=API_V1_PREFIX)
 
 
 # ---------------------------------------------------------
@@ -163,7 +166,7 @@ def health_check():
 # ---------------------------------------------------------
 # Prediction Endpoint
 # ---------------------------------------------------------
-@app.post("/predict", response_model=PredictionResponse)
+@v1_router.post("/predict", response_model=PredictionResponse)
 def predict(features: PatientFeatures):
     """
     Run inference on a single patient record.
@@ -221,7 +224,13 @@ def predict(features: PatientFeatures):
 # ---------------------------------------------------------
 # Model Info Endpoint
 # ---------------------------------------------------------
-@app.get("/model-info")
+@v1_router.get("/model-info")
 def model_info():
     """Return model metadata (version, training time, metrics, etc)."""
     return get_model_metadata()
+
+
+# ---------------------------------------------------------
+# Register the versioned router
+# ---------------------------------------------------------
+app.include_router(v1_router)

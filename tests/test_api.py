@@ -73,7 +73,7 @@ def test_health_check():
 
 
 def test_predict_valid():
-    response = client.post("/predict", json=VALID_SAMPLE)
+    response = client.post("/v1/predict", json=VALID_SAMPLE)
     assert response.status_code == 200
     data = response.json()
     assert "prediction" in data
@@ -82,7 +82,7 @@ def test_predict_valid():
 
 
 def test_predict_missing_fields():
-    response = client.post("/predict", json={"Age": 54})
+    response = client.post("/v1/predict", json={"Age": 54})
     assert response.status_code == 422
     data = response.json()
     assert "detail" in data
@@ -93,7 +93,7 @@ def test_predict_missing_fields():
 
 
 def test_model_info():
-    response = client.get("/model-info")
+    response = client.get("/v1/model-info")
     assert response.status_code == 200
     data = response.json()
     assert "model_version" in data
