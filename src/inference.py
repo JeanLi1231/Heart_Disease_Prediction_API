@@ -8,11 +8,10 @@ Usage:
           --output outputs/predictions.csv
 
   - From command line with single sample (JSON):
-      python src/inference.py --sample '\\'
-      {"Age": 54, "Sex": "M", "ChestPainType": "ASY", "RestingBP": 150,
-       "Cholesterol": 195, "FastingBS": 0, "RestingECG": "Normal",
-       "MaxHR": 122, "ExerciseAngina": "N", "Oldpeak": 0, "ST_Slope": "Up"}
-      '\\'
+      python src/inference.py --sample '{
+      "Age": 54, "Sex": "M", "ChestPainType": "ASY", "RestingBP": 150,
+      "Cholesterol": 195, "FastingBS": 0, "RestingECG": "Normal",
+      "MaxHR": 122, "ExerciseAngina": "N", "Oldpeak": 0, "ST_Slope": "Up"}'
 
   - As a module:
       from src import load_model, predict

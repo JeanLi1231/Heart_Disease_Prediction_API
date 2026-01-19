@@ -1,98 +1,218 @@
 # Heart Disease Prediction API
 
-A production-grade machine learning project for predicting heart disease using clinical data. This repository includes data processing, model training, evaluation, and a FastAPI-based REST API for real-time predictions.
+Production-style FastAPI ML inference service for heart disease risk prediction, with Docker, CI, and reproducible training artifacts.
+
+This project demonstrates how to take a trained ML model and expose it as a robust, testable HTTP service, following common industry patterns.
+
 
 ## Features
-- End-to-end ML pipeline from data ingestion to a containerized inference service (training, preprocessing, evaluation, and versioned artifacts)
-- Model metadata and versioning for reproducibility and traceability
-- REST API built with FastAPI for health checks, predictions, and model metadata
-- Dockerized application for reproducible, deployment-ready inference
-- CI workflow with linting, API integration tests, and live Docker-based tests
-- Configuration-driven training and inference via YAML files
+
+- Reproducible ML pipeline: data loading, preprocessing, training, evaluation, and artifact versioning
+- Versioned model metadata exposed via API for traceability
+- REST API built with FastAPI
+- Dockerized for consistent local and CI execution
+- CI workflow with linting, API contract tests (FastAPI TestClient), and live container tests
+- Configuration driven by YAML files
+
 
 ## Project Structure
 ```
-├── app/                # FastAPI app and model artifact
-├── config/             # YAML config files for training and model
-├── data/               # Input data (CSV)
-├── models/             # Saved model artifacts (versioned)
-├── notebooks/          # Jupyter notebooks for exploration and parameter tuning
-├── outputs/            # Predictions and logs
-├── src/                # Source code (training, inference, utils)
-├── tests/              # Integration and live API tests
-├── Dockerfile          # Containerization
-├── requirements.txt    # Runtime dependencies
-├── requirements-dev.txt# Dev/test dependencies
-└── README.md           # Project documentation
+.
+├── app/                    # FastAPI application
+│   └── main.py
+├── src/                    # Training and inference logic
+│   ├── train.py
+│   ├── inference.py
+│   └── utils/
+│       └── data.py
+├── notebooks/              # Exploration and parameter tuning
+│   ├── exploration.ipynb
+│   └── tuning.ipynb
+├── config/                 # YAML configuration files
+│   ├── train_config.yaml
+│   └── model_config.yaml
+├── tests/                  # API contract and live container tests
+│   ├── test_api.py
+│   ├── test_api_live.py
+│   └── test_api_live_withmodel.py
+├── Dockerfile
+├── requirements.txt
+├── requirements-dev.txt
+└── README.md
 ```
 
-## Getting Started
 
-### 1. Clone the repository
-```sh
-git clone <repo-url>
-cd Heart_Disease_Prediction
+## API Endpoints
+
+The API exposes a small, production-style interface for model inference and service health monitoring.
+
+
+### Health Check (Unversioned)
+
+`GET /health`
+
+Used for container orchestration, Docker health checks, and uptime monitoring.
+This endpoint is intentionally unversioned so infrastructure does not need to change when API versions evolve.
+
+Response
+```json
+   {
+     "status": "ok"
+   }   
 ```
 
-### 2. Set up the environment
-```sh
-python -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-# Optional: install dev/test/jupyter dependencies used for development and CI
-# (not required in production/runtime images)
-pip install -r requirements-dev.txt  # optional
-```
 
-### 3. Train the model
-Edit config files in `config/` as needed, then run:
-```sh
-python src/train.py
-```
-Model artifact will be saved in `models/`.
+### Predict (Versioned)
 
-### 4. Run the API
-```sh
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-```
+`POST /v1/predict`
 
-### 5. Make predictions
-- Health check: `GET /health`
-- Predict: `POST /predict` (JSON body with patient features)
-- Model info: `GET /model-info`
+Runs inference on a single patient record.
 
-Example prediction request:
+Request Body
 ```json
 {
-  "Age": 54,
-  "Sex": "M",
-  "ChestPainType": "ASY",
-  "RestingBP": 150,
-  "Cholesterol": 195,
-  "FastingBS": 0,
-  "RestingECG": "Normal",
-  "MaxHR": 122,
-  "ExerciseAngina": "N",
-  "Oldpeak": 0,
-  "ST_Slope": "Up"
+   "Age": 54,
+   "Sex": "M",
+   "ChestPainType": "ASY",
+   "RestingBP": 150,
+   "Cholesterol": 195,
+   "FastingBS": 0,
+   "RestingECG": "Normal",
+   "MaxHR": 122,
+   "ExerciseAngina": "N",
+   "Oldpeak": 0,
+   "ST_Slope": "Up"
 }
 ```
 
-### 6. Run tests
-```sh
-pytest -v tests/
+Successful Response
+```json
+   {
+    "prediction": 0,
+    "probability": 0.09320092545819073,
+    "diagnosis": "No Heart Disease"
+   }   
 ```
 
-### 7. Build and run with Docker
-```sh
-docker build -t heart-disease-prediction-api .
-docker run -p 8000:8000 heart-disease-prediction-api
+Error Responses
+- 422 — validation error (missing or invalid fields)
+- 503 — model artifact not loaded
+
+
+### Model Metadata (Versioned)
+
+`GET /v1/model-info`
+
+Returns metadata embedded at training time.
+
+Response
+```json
+    {
+      "model_version": "1.0.0",
+      "trained_at": "2026-01-17T13:59:04.269416",
+      "data_hash": "ab21f2524241",
+      "metrics": {
+        "accuracy": 0.8478260869565217,
+        "roc_auc": 0.9179818268770923,
+        "precision": 0.87,
+        "recall": 0.8529411764705882,
+        "f1_score": 0.8613861386138614,
+        "training_time_seconds": 0.02
+      },
+      "model_params": {
+        "C": 1,
+        "class_weight": null,
+        "gamma": "auto",
+        "kernel": "rbf",
+        "probability": true
+      },
+      "python_version": "3.11.14",
+      "sklearn_version": "1.7.2",
+      "pandas_version": "2.3.3"
+    }
 ```
 
-## CI/CD
-- GitHub Actions workflow: Linting, integration tests, Docker build, and live API tests
+If the model artifact is not present, this endpoint returns:
+```json   
+    {}   
+```
 
-## Configuration
-- `config/train_config.yaml`: Data paths, training/test split, output locations
-- `config/model_config.yaml`: Model hyperparameters
+
+## Model Artifact Design
+
+The trained model is saved as a single artifact containing:
+
+- pipeline: full sklearn preprocessing plus estimator pipeline
+- metadata: model version, training timestamp, data hash, evaluation metrics, model params, python, sklearn and pandas versions
+
+This ensures:
+- Training and inference stay consistent
+- Metadata travels with the model
+- No duplicated configuration in the API
+
+The API lazy-loads the model at runtime to avoid import-time failures in CI and testing environments.
+
+
+## Docker Usage
+
+Build
+```bash
+   docker build -t heart-disease-api:1.0 .
+```
+
+Run
+```bash
+   docker run -p 8000:8000 heart-disease-api:1.0
+```
+
+Health Check
+```bash
+   curl http://localhost:8000/health
+```
+
+
+## Testing Strategy
+
+This project follows a layered testing approach.
+
+Integration / API Contract Tests
+- Located in tests/test_api.py
+- Use FastAPI TestClient
+- Inject a dummy sklearn pipeline
+- Do not require a real model.pkl
+- Fast and deterministic
+- Run on every CI push
+
+Live / Container Integration Tests (No Model)
+- Located in tests/test_api_live.py
+- Validate container startup and routing
+- Expect 503 from prediction endpoints
+- Used in CI to ensure infrastructure correctness
+
+Live / Container Integration Tests (With Model)
+- Located in tests/test_api_live_withmodel.py
+- Run against a container with a real model artifact
+- Validate full inference path
+- Intended for manual runs or release pipelines
+
+
+## API Versioning Strategy
+
+- /health is unversioned
+- All inference endpoints are versioned (/v1/...) using FastAPI routers for version control
+- New versions (/v2) can reuse the same logic while swapping models or pipelines
+- Infrastructure and Docker configuration remain unchanged
+
+
+## Scope and Non-Goals
+
+This project intentionally focuses on:
+- Clean ML to API to Docker integration
+- Reproducible training artifacts
+- CI-safe testing patterns
+
+Out of scope:
+- Authentication and authorization
+- Feature stores
+- Autoscaling and cloud deployment
+- Model monitoring and drift detection
